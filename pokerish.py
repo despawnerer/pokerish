@@ -17,7 +17,7 @@ class Hand(tuple):
             raise InvalidHand(
                 "poker hands can't have two of the same card")
 
-        self.category = decide_category(self)
+        self.category = categorize(self)
 
     @classmethod
     def from_string(cls, string):
@@ -44,24 +44,31 @@ ONE_PAIR = Category(1, "One Pair")
 TWO_PAIR = Category(2, "Two Pair")
 THREE_OF_A_KIND = Category(3, "Three of a Kind")
 STRAIGHT = Category(4, "Straight")
+FIVE_HIGH_STRAIGHT = Category(4, "Straight")
 FLUSH = Category(5, "Flush")
 FULL_HOUSE = Category(6, "Full House")
 FOUR_OF_A_KIND = Category(7, "Four of a Kind")
 STRAIGHT_FLUSH = Category(8, "Straight Flush")
+FIVE_HIGH_STRAIGHT_FLUSH = Category(8, "Straight Flush")
 ROYAL_FLUSH = Category(9, "Royal Flush")
 
 
-def decide_category(hand):
+def categorize(hand):
     cards = sorted(hand, key=attrgetter('rank'))
     grouped_cards = group_by_rank_count(cards)
 
     if len(grouped_cards) == 5:
-        if are_sequential(cards):
+        is_five_high = is_five_high_straight(cards)
+        if are_sequential(cards) or is_five_high:
             if are_all_same_suits(cards):
-                if cards[-1].is_ace():
+                if is_five_high:
+                    return FIVE_HIGH_STRAIGHT_FLUSH
+                elif cards[-1].is_ace():
                     return ROYAL_FLUSH
                 else:
                     return STRAIGHT_FLUSH
+            elif is_five_high:
+                return FIVE_HIGH_STRAIGHT
             else:
                 return STRAIGHT
         elif are_all_same_suits(cards):
@@ -84,6 +91,10 @@ def decide_category(hand):
             return FULL_HOUSE
     else:
         raise RuntimeError("This really shouldn't be reachable.")
+
+
+def is_five_high_straight(cards):
+    return get_ranks(cards[:-1]) == [0, 1, 2, 3] and cards[-1].is_ace()
 
 
 # card utils

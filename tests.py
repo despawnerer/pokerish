@@ -9,10 +9,12 @@ from pokerish import (
     TWO_PAIR,
     THREE_OF_A_KIND,
     STRAIGHT,
+    FIVE_HIGH_STRAIGHT,
     FLUSH,
     FULL_HOUSE,
     FOUR_OF_A_KIND,
     STRAIGHT_FLUSH,
+    FIVE_HIGH_STRAIGHT_FLUSH,
     ROYAL_FLUSH,
     InvalidCard,
     InvalidHand,
@@ -68,6 +70,10 @@ class HandCategoryTestCase(TestCase):
         hand = Hand.from_string('TS JH QS KS AS')
         self.assertEqual(hand.category, STRAIGHT)
 
+    def test_five_high_straight(self):
+        hand = Hand.from_string('5H 4S 3S 2D AS')
+        self.assertEqual(hand.category, FIVE_HIGH_STRAIGHT)
+
     def test_flush(self):
         hand = Hand.from_string('5S JS QS KS AS')
         self.assertEqual(hand.category, FLUSH)
@@ -87,6 +93,10 @@ class HandCategoryTestCase(TestCase):
     def test_royal_flush(self):
         hand = Hand.from_string('TS JS QS KS AS')
         self.assertEqual(hand.category, ROYAL_FLUSH)
+
+    def test_five_high_straight_flush(self):
+        hand = Hand.from_string('5S 4S 3S 2S AS')
+        self.assertEqual(hand.category, FIVE_HIGH_STRAIGHT_FLUSH)
 
 
 # card
