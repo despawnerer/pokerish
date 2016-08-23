@@ -67,56 +67,51 @@ def evaluate_hand(hand):
     Rank is a tuple of the meaningful card ranks.
     """
     cards = sorted(hand.cards, key=attrgetter('rank'), reverse=True)
-    grouped_cards = group_by_rank_count(cards)
-    ranks = get_ranks(iflatten(grouped_cards))
+    rank_groups = sorted_histogram(get_ranks(cards))
+    ranks = flatten(rank_groups)
 
-    if len(grouped_cards) == 5:
-        is_five_high_straight = ranks == [12, 3, 2, 1, 0]
-        if is_five_high_straight:
+    if len(rank_groups) == 5:
+        if are_five_high_straight_ranks(ranks):
             ranks = [3, 2, 1, 0, -1]
-            if are_all_same_suits(cards):
+
+        is_straight = are_straight_ranks(ranks)
+        is_flush = are_all_same_suits(cards)
+
+        if is_straight and is_flush:
+            if ranks[0] == 12:
+                return ROYAL_FLUSH, ranks
+            else:
                 return STRAIGHT_FLUSH, ranks
-            else:
-                return STRAIGHT, ranks
-        elif are_sequential(cards):
-            if are_all_same_suits(cards):
-                if cards[0].is_ace():
-                    return ROYAL_FLUSH, ranks
-                else:
-                    return STRAIGHT_FLUSH, ranks
-            else:
-                return STRAIGHT, ranks
-        elif are_all_same_suits(cards):
+        elif is_straight:
+            return STRAIGHT, ranks
+        elif is_flush:
             return FLUSH, ranks
         else:
             return HIGH_CARD, ranks
-    elif len(grouped_cards) == 4:
+    elif len(rank_groups) == 4:
         return ONE_PAIR, ranks
-    elif len(grouped_cards) == 3:
-        largest_group = grouped_cards[0]
+    elif len(rank_groups) == 3:
+        largest_group = rank_groups[0]
         if len(largest_group) == 3:
             return THREE_OF_A_KIND, ranks
         else:
             return TWO_PAIR, ranks
-    elif len(grouped_cards) == 2:
-        largest_group = grouped_cards[0]
+    elif len(rank_groups) == 2:
+        largest_group = rank_groups[0]
         if len(largest_group) == 4:
             return FOUR_OF_A_KIND, ranks
         else:
             return FULL_HOUSE, ranks
-    else:
-        raise RuntimeError("This really shouldn't be reachable.")
+
+    raise RuntimeError("This really shouldn't be reachable.")
 
 
-# card utils
-
-def group_by_rank_count(sorted_cards):
-    grouped = group_into_list(sorted_cards, attrgetter('rank'))
-    return list(sorted(grouped, key=len, reverse=True))
+def are_five_high_straight_ranks(ranks):
+    return ranks == [12, 3, 2, 1, 0]
 
 
-def are_sequential(sorted_cards):
-    return is_strict_sequence(reversed(get_ranks(sorted_cards)))
+def are_straight_ranks(ranks):
+    return is_strict_sequence(reversed(ranks))
 
 
 def are_all_same_suits(cards):
@@ -161,9 +156,6 @@ class Card(object):
     def __eq__(self, other):
         return self.string == other.string
 
-    def is_ace(self):
-        return self.value == 'A'
-
 
 class InvalidCard(Exception):
     pass
@@ -171,14 +163,15 @@ class InvalidCard(Exception):
 
 # generic utils
 
-iflatten = chain.from_iterable
+def flatten(iterable):
+    return list(chain.from_iterable(iterable))
 
 
-def group_into_list(iterable, key):
+def sorted_histogram(iterable):
     groups = []
-    for k, g in groupby(iterable, key):
+    for k, g in groupby(iterable):
         groups.append(list(g))
-    return groups
+    return list(sorted(groups, key=len, reverse=True))
 
 
 def is_strict_sequence(iterable_of_integers):
