@@ -9,12 +9,10 @@ from pokerish import (
     TWO_PAIR,
     THREE_OF_A_KIND,
     STRAIGHT,
-    FIVE_HIGH_STRAIGHT,
     FLUSH,
     FULL_HOUSE,
     FOUR_OF_A_KIND,
     STRAIGHT_FLUSH,
-    FIVE_HIGH_STRAIGHT_FLUSH,
     ROYAL_FLUSH,
     InvalidCard,
     InvalidHand,
@@ -28,13 +26,13 @@ from pokerish import (
 class HandFromStringTestCase(TestCase):
     def test_valid(self):
         hand = Hand.from_string('4D 3D 3D 7H AD')
-        self.assertEqual(hand, (
+        self.assertEqual(hand, Hand((
             Card('4D'),
             Card('3D'),
             Card('3D'),
             Card('7H'),
             Card('AD'),
-        ))
+        )))
 
     def test_too_many_cards(self):
         with self.assertRaises(InvalidHand):
@@ -72,7 +70,7 @@ class HandCategoryTestCase(TestCase):
 
     def test_five_high_straight(self):
         hand = Hand.from_string('5H 4S 3S 2D AS')
-        self.assertEqual(hand.category, FIVE_HIGH_STRAIGHT)
+        self.assertEqual(hand.category, STRAIGHT)
 
     def test_flush(self):
         hand = Hand.from_string('5S JS QS KS AS')
@@ -90,13 +88,55 @@ class HandCategoryTestCase(TestCase):
         hand = Hand.from_string('2S 3S 4S 5S 6S')
         self.assertEqual(hand.category, STRAIGHT_FLUSH)
 
+    def test_five_high_straight_flush(self):
+        hand = Hand.from_string('5S 4S 3S 2S AS')
+        self.assertEqual(hand.category, STRAIGHT_FLUSH)
+
     def test_royal_flush(self):
         hand = Hand.from_string('TS JS QS KS AS')
         self.assertEqual(hand.category, ROYAL_FLUSH)
 
-    def test_five_high_straight_flush(self):
-        hand = Hand.from_string('5S 4S 3S 2S AS')
-        self.assertEqual(hand.category, FIVE_HIGH_STRAIGHT_FLUSH)
+
+class ComparisonTestCase(TestCase):
+    def test_category_order(self):
+        hands_from_lowest_to_highest = [
+            Hand.from_string('TS 2S JH KS AS'),  # high card
+            Hand.from_string('TS JS JH KS AS'),  # one pair
+            Hand.from_string('TS JS JH TH AS'),  # two pair
+            Hand.from_string('4D 4H 4S 7H 8D'),  # three of a kind
+            Hand.from_string('5H 4S 3S 2D AS'),  # straight
+            Hand.from_string('5S JS QS KS AS'),  # flush
+            Hand.from_string('4D 4H 4S KS KD'),  # full house
+            Hand.from_string('4D 4H 4S 4C 8D'),  # four of a kind
+            Hand.from_string('2S 3S 4S 5S 6S'),  # straight flush
+            Hand.from_string('TS JS QS KS AS'),  # royal flush
+        ]
+        resorted_hands = sorted(hands_from_lowest_to_highest)
+        self.assertEqual(hands_from_lowest_to_highest, resorted_hands)
+
+    def test_straight_flushes(self):
+        five_high_straight_flush = Hand.from_string('5S 4S 3S 2S AS')
+        straight_flush = Hand.from_string('2S 3S 4S 5S 6S')
+        royal_flush = Hand.from_string('TS JS QS KS AS')
+        self.assertGreater(royal_flush, straight_flush)
+        self.assertGreater(straight_flush, five_high_straight_flush)
+        self.assertGreater(royal_flush, five_high_straight_flush)
+
+    def test_four_of_a_kind(self):
+        fives_with_ace = Hand.from_string('5D 5H 5S 5C AS')
+        fives_with_two = Hand.from_string('5D 5H 5S 5C 2S')
+        fours = Hand.from_string('4D 4H 4S 4C AS')
+        self.assertGreater(fives_with_ace, fives_with_two)
+        self.assertGreater(fives_with_two, fours)
+        self.assertGreater(fives_with_ace, fours)
+
+    def test_full_house(self):
+        fives_and_fours = Hand.from_string('5D 5H 5S 4S 4D')
+        fives_and_threes = Hand.from_string('5D 5H 5S 3S 3D')
+        fours_and_aces = Hand.from_string('4D 4H 4S AC AS')
+        self.assertGreater(fives_and_fours, fives_and_threes)
+        self.assertGreater(fives_and_threes, fours_and_aces)
+        self.assertGreater(fives_and_fours, fours_and_aces)
 
 
 # card

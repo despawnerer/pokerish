@@ -5,19 +5,19 @@ from collections import namedtuple
 
 # hands
 
-class Hand(tuple):
+class Hand(object):
     def __init__(self, cards):
-        super(Hand, self).__init__(cards)
-
-        if len(self) != 5:
+        if len(cards) != 5:
             raise InvalidHand(
-                "poker hands must have five cards, got %d" % len(self))
+                "poker hands must have five cards, got %d" % len(cards))
 
-        if are_any_equal(self):
+        if are_any_equal(cards):
             raise InvalidHand(
                 "poker hands can't have two of the same card")
 
-        self.category = categorize(self)
+        self.cards = cards
+        self.category, rank_within_category = evaluate_hand(self)
+        self.rank = [self.category.rank] + rank_within_category
 
     @classmethod
     def from_string(cls, string):
@@ -27,8 +27,16 @@ class Hand(tuple):
         return self.__str__()
 
     def __str__(self):
-        cards = ', '.join(map(str, self))
+        cards = ', '.join(map(str, self.cards))
         return "<hand [%s], '%s'>" % (cards, self.category.name)
+
+    def __cmp__(self, other):
+        if self.rank == other.rank:
+            return 0
+        elif self.rank > other.rank:
+            return 1
+        else:
+            return -1
 
 
 class InvalidHand(Exception):
@@ -44,68 +52,70 @@ ONE_PAIR = Category(1, "One Pair")
 TWO_PAIR = Category(2, "Two Pair")
 THREE_OF_A_KIND = Category(3, "Three of a Kind")
 STRAIGHT = Category(4, "Straight")
-FIVE_HIGH_STRAIGHT = Category(4, "Straight")
 FLUSH = Category(5, "Flush")
 FULL_HOUSE = Category(6, "Full House")
 FOUR_OF_A_KIND = Category(7, "Four of a Kind")
 STRAIGHT_FLUSH = Category(8, "Straight Flush")
-FIVE_HIGH_STRAIGHT_FLUSH = Category(8, "Straight Flush")
 ROYAL_FLUSH = Category(9, "Royal Flush")
 
 
-def categorize(hand):
-    cards = sorted(hand, key=attrgetter('rank'))
+def evaluate_hand(hand):
+    """
+    Return category for the hand and its rank within that category.
+
+    Rank is a tuple of the meaningful card ranks.
+    """
+    cards = sorted(hand.cards, key=attrgetter('rank'), reverse=True)
     grouped_cards = group_by_rank_count(cards)
+    ranks = get_ranks(iflatten(grouped_cards))
 
     if len(grouped_cards) == 5:
-        is_five_high = is_five_high_straight(cards)
-        if are_sequential(cards) or is_five_high:
+        is_five_high_straight = ranks == [12, 3, 2, 1, 0]
+        if is_five_high_straight:
+            ranks = [3, 2, 1, 0, -1]
             if are_all_same_suits(cards):
-                if is_five_high:
-                    return FIVE_HIGH_STRAIGHT_FLUSH
-                elif cards[-1].is_ace():
-                    return ROYAL_FLUSH
-                else:
-                    return STRAIGHT_FLUSH
-            elif is_five_high:
-                return FIVE_HIGH_STRAIGHT
+                return STRAIGHT_FLUSH, ranks
             else:
-                return STRAIGHT
+                return STRAIGHT, ranks
+        elif are_sequential(cards):
+            if are_all_same_suits(cards):
+                if cards[0].is_ace():
+                    return ROYAL_FLUSH, ranks
+                else:
+                    return STRAIGHT_FLUSH, ranks
+            else:
+                return STRAIGHT, ranks
         elif are_all_same_suits(cards):
-            return FLUSH
+            return FLUSH, ranks
         else:
-            return HIGH_CARD
+            return HIGH_CARD, ranks
     elif len(grouped_cards) == 4:
-        return ONE_PAIR
+        return ONE_PAIR, ranks
     elif len(grouped_cards) == 3:
-        largest_group = grouped_cards[-1]
+        largest_group = grouped_cards[0]
         if len(largest_group) == 3:
-            return THREE_OF_A_KIND
+            return THREE_OF_A_KIND, ranks
         else:
-            return TWO_PAIR
+            return TWO_PAIR, ranks
     elif len(grouped_cards) == 2:
-        largest_group = grouped_cards[-1]
+        largest_group = grouped_cards[0]
         if len(largest_group) == 4:
-            return FOUR_OF_A_KIND
+            return FOUR_OF_A_KIND, ranks
         else:
-            return FULL_HOUSE
+            return FULL_HOUSE, ranks
     else:
         raise RuntimeError("This really shouldn't be reachable.")
-
-
-def is_five_high_straight(cards):
-    return get_ranks(cards[:-1]) == [0, 1, 2, 3] and cards[-1].is_ace()
 
 
 # card utils
 
 def group_by_rank_count(sorted_cards):
     grouped = group_into_list(sorted_cards, attrgetter('rank'))
-    return list(sorted(grouped, key=len))
+    return list(sorted(grouped, key=len, reverse=True))
 
 
 def are_sequential(sorted_cards):
-    return is_strict_sequence(get_ranks(sorted_cards))
+    return is_strict_sequence(reversed(get_ranks(sorted_cards)))
 
 
 def are_all_same_suits(cards):
