@@ -16,7 +16,7 @@ from pokerish import (
     ROYAL_FLUSH,
     InvalidCard,
     InvalidHand,
-    is_strict_sequence,
+    is_counting_down,
     are_all_equal,
 )
 
@@ -170,24 +170,24 @@ class CardTestCase(TestCase):
 
 # utils
 
-class IsStrictSequenceTestCase(TestCase):
+class IsCountingDownTestCase(TestCase):
     def test_strict_sequence(self):
-        self.assertTrue(is_strict_sequence([1, 2, 3, 4, 5]))
+        self.assertTrue(is_counting_down([5, 4, 3, 2, 1]))
 
     def test_lazy_strict_sequence(self):
-        self.assertTrue(is_strict_sequence(xrange(10)))
+        self.assertTrue(is_counting_down(reversed(xrange(10))))
 
     def test_repeating_numbers(self):
-        self.assertFalse(is_strict_sequence([1, 2, 2, 3, 4]))
+        self.assertFalse(is_counting_down([4, 3, 2, 2, 1]))
 
     def test_skipping_numbers(self):
-        self.assertFalse(is_strict_sequence([1, 3, 4]))
+        self.assertFalse(is_counting_down([4, 3, 1]))
 
     def test_one_number(self):
-        self.assertTrue(is_strict_sequence([1]))
+        self.assertTrue(is_counting_down([1]))
 
     def test_empty(self):
-        self.assertTrue(is_strict_sequence([]))
+        self.assertTrue(is_counting_down([]))
 
 
 class AllEqualTestCase(TestCase):
@@ -196,9 +196,3 @@ class AllEqualTestCase(TestCase):
 
     def test_unequal(self):
         self.assertFalse(are_all_equal([1, 2, 3]))
-
-    def test_lazy_equal(self):
-        self.assertTrue(are_all_equal(repeat(10, 5)))
-
-    def test_lazy_unequal(self):
-        self.assertFalse(are_all_equal(xrange(10)))

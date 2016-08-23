@@ -66,16 +66,15 @@ def evaluate_hand(hand):
 
     Rank is a tuple of the meaningful card ranks.
     """
-    cards = sorted(hand.cards, key=attrgetter('rank'), reverse=True)
-    rank_groups = sorted_histogram(get_ranks(cards))
+    rank_groups = get_rank_groups_sorted_by_length(hand.cards)
     ranks = flatten(rank_groups)
 
     if len(rank_groups) == 5:
         if are_five_high_straight_ranks(ranks):
             ranks = [3, 2, 1, 0, -1]
 
-        is_straight = are_straight_ranks(ranks)
-        is_flush = are_all_same_suits(cards)
+        is_straight = is_counting_down(ranks)
+        is_flush = are_all_equal(get_suits(hand.cards))
 
         if is_straight and is_flush:
             if ranks[0] == 12:
@@ -106,16 +105,16 @@ def evaluate_hand(hand):
     raise RuntimeError("This really shouldn't be reachable.")
 
 
+def get_rank_groups_sorted_by_length(cards):
+    ranks = sorted(get_ranks(cards), reverse=True)
+    groups = []
+    for k, g in groupby(ranks):
+        groups.append(list(g))
+    return list(sorted(groups, key=len, reverse=True))
+
+
 def are_five_high_straight_ranks(ranks):
     return ranks == [12, 3, 2, 1, 0]
-
-
-def are_straight_ranks(ranks):
-    return is_strict_sequence(reversed(ranks))
-
-
-def are_all_same_suits(cards):
-    return are_all_equal(get_suits(cards))
 
 
 def get_ranks(cards):
@@ -167,31 +166,19 @@ def flatten(iterable):
     return list(chain.from_iterable(iterable))
 
 
-def sorted_histogram(iterable):
-    groups = []
-    for k, g in groupby(iterable):
-        groups.append(list(g))
-    return list(sorted(groups, key=len, reverse=True))
-
-
-def is_strict_sequence(iterable_of_integers):
+def is_counting_down(iterable_of_integers):
     iterator = iter(iterable_of_integers)
     try:
         first, second = next(iterator), next(iterator)
-        while second - first == 1:
+        while first - second == 1:
             first, second = second, next(iterator)
         return False
     except StopIteration:
         return True
 
 
-def are_all_equal(iterable):
-    iterator = iter(iterable)
-    try:
-        first = next(iterator)
-        return all(first == other for other in iterator)
-    except StopIteration:
-        return True
+def are_all_equal(lst):
+    return lst.count(lst[0]) == len(lst)
 
 
 def find_duplicate(iterable):
