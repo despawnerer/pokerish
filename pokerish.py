@@ -11,9 +11,10 @@ class Hand(object):
             raise InvalidHand(
                 "poker hands must have five cards, got %d" % len(cards))
 
-        if are_any_equal(cards):
+        duplicate = find_duplicate(cards)
+        if duplicate:
             raise InvalidHand(
-                "poker hands can't have two of the same card")
+                "poker hands can't have two of the same card: %s" % duplicate)
 
         self.cards = cards
         self.category, rank_within_category = evaluate_hand(self)
@@ -153,6 +154,9 @@ class Card(object):
     def __repr__(self):
         return 'Card("%s%s")' % (self.value, self.suit)
 
+    def __hash__(self):
+        return hash(self.value + self.suit)
+
     def __str__(self):
         return self.value + self.suit
 
@@ -199,10 +203,10 @@ def are_all_equal(iterable):
         return True
 
 
-def are_any_equal(iterable):
-    iterator = iter(iterable)
-    try:
-        first = next(iterator)
-        return any(first == other for other in iterator)
-    except StopIteration:
-        return True
+def find_duplicate(iterable):
+    seen = set()
+    for item in iterable:
+        if item in seen:
+            return item
+        else:
+            seen.add(item)

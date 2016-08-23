@@ -25,11 +25,11 @@ from pokerish import (
 
 class HandFromStringTestCase(TestCase):
     def test_valid(self):
-        hand = Hand.from_string('4D 3D 3D 7H AD')
+        hand = Hand.from_string('4D 3D 5D 7H AD')
         self.assertEqual(hand, Hand((
             Card('4D'),
             Card('3D'),
-            Card('3D'),
+            Card('5D'),
             Card('7H'),
             Card('AD'),
         )))
@@ -45,6 +45,10 @@ class HandFromStringTestCase(TestCase):
     def test_duplicate_cards(self):
         with self.assertRaises(InvalidHand):
             Hand.from_string('AD AH AS AC AD')
+
+    def test_only_two_duplicates(self):
+        with self.assertRaises(InvalidHand):
+            Hand.from_string('4D 3D 3D 7H AD')
 
 
 class HandCategoryTestCase(TestCase):
