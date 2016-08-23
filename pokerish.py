@@ -140,28 +140,26 @@ CARD_VALUES = ('2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A')
 class Card(object):
     def __init__(self, string):
         try:
-            value, suit = string.upper()
-            self.rank = CARD_VALUES.index(value)
+            self.string = string.upper()
+            self.value, self.suit = self.string
+            self.rank = CARD_VALUES.index(self.value)
         except ValueError:
             raise InvalidCard("invalid card: '%s'" % string)
 
-        if suit not in CARD_SUITS:
+        if self.suit not in CARD_SUITS:
             raise InvalidCard("invalid card: '%s'" % string)
 
-        self.value = value
-        self.suit = suit
-
     def __repr__(self):
-        return 'Card("%s%s")' % (self.value, self.suit)
+        return 'Card("%s")' % self.string
 
     def __hash__(self):
-        return hash(self.value + self.suit)
+        return hash(self.string)
 
     def __str__(self):
-        return self.value + self.suit
+        return self.string
 
     def __eq__(self, other):
-        return self.value == other.value and self.suit == other.suit
+        return self.string == other.string
 
     def is_ace(self):
         return self.value == 'A'
