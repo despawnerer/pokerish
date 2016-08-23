@@ -1,5 +1,4 @@
 from unittest import TestCase
-from itertools import repeat
 
 from pokerish import (
     Card,
