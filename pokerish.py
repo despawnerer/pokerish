@@ -64,7 +64,7 @@ def evaluate_hand(hand):
     """
     Return category for the hand and its rank within that category.
 
-    Rank is a tuple of the meaningful card ranks.
+    Rank is a tuple of card ranks in order appropriate for category.
     """
     rank_groups = get_rank_groups_sorted_by_length(hand.cards)
     ranks = flatten(rank_groups)
