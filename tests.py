@@ -117,7 +117,7 @@ class ComparisonTestCase(TestCase):
         resorted_hands = sorted(hands_from_lowest_to_highest)
         self.assertEqual(hands_from_lowest_to_highest, resorted_hands)
 
-    def test_straight_flushes(self):
+    def test_straight_flush(self):
         five_high_straight_flush = Hand.from_string('5S 4S 3S 2S AS')
         straight_flush = Hand.from_string('2S 3S 4S 5S 6S')
         royal_flush = Hand.from_string('TS JS QS KS AS')
@@ -140,6 +140,46 @@ class ComparisonTestCase(TestCase):
         self.assertGreater(fives_and_fours, fives_and_threes)
         self.assertGreater(fives_and_threes, fours_and_aces)
         self.assertGreater(fives_and_fours, fours_and_aces)
+
+    def test_flush(self):
+        king_queen = Hand.from_string('KS 5S QS 7S 4S')
+        king_jack = Hand.from_string('KS 5S JS 7S 4S')
+        queen_eight = Hand.from_string('QS 5S 8S 7S 4S')
+        self.assertGreater(king_queen, king_jack)
+        self.assertGreater(king_jack, queen_eight)
+        self.assertGreater(king_queen, queen_eight)
+
+    def test_straight(self):
+        five_high = Hand.from_string('5S 4S 3S 2S AS')
+        six_high = Hand.from_string('2S 3S 4S 5S 6S')
+        ace_high = Hand.from_string('TS JS QS KS AS')
+        self.assertGreater(ace_high, six_high)
+        self.assertGreater(six_high, five_high)
+        self.assertGreater(ace_high, five_high)
+
+    def test_three_of_a_kind(self):
+        fives_with_ace = Hand.from_string('5D 5H 5S 7C AS')
+        fives_with_three = Hand.from_string('5D 5H 5S 3C 2S')
+        fours = Hand.from_string('4D 4H 4S 5C AS')
+        self.assertGreater(fives_with_ace, fives_with_three)
+        self.assertGreater(fives_with_three, fours)
+        self.assertGreater(fives_with_ace, fours)
+
+    def test_two_pair(self):
+        sevens_with_fives = Hand.from_string('5D 5H 4S 7C 7S')
+        sevens_with_fours = Hand.from_string('4D 4H 3S 7C 7S')
+        sixes_with_threes = Hand.from_string('6D 6H 2S 3C 3S')
+        self.assertGreater(sevens_with_fives, sevens_with_fours)
+        self.assertGreater(sevens_with_fours, sixes_with_threes)
+        self.assertGreater(sevens_with_fives, sixes_with_threes)
+
+    def test_pair(self):
+        fives_and_seven = Hand.from_string('5D 5H 4S 7C 6S')
+        fives_and_six = Hand.from_string('5D 5H 3S 6C 4S')
+        fours = Hand.from_string('4D 4H 2S 3C AS')
+        self.assertGreater(fives_and_seven, fives_and_six)
+        self.assertGreater(fives_and_six, fours)
+        self.assertGreater(fives_and_seven, fours)
 
 
 # card
